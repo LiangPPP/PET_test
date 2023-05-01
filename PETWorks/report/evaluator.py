@@ -173,10 +173,10 @@ def __filterWithKAnonymity(args: Tuple):
             originalData, privacyModels, __javaApi, None, suppressRate
         )
     except Py4JJavaError:
-        return
+        return (None, None, None)
 
     if not anonymizedResult:
-        return None
+        return (None, None, None)
 
     anonymizedSolutions = anonymizedResult.getLattice().getLevels()
 
@@ -221,7 +221,11 @@ def filterWithKAnonymityParallelly(
     fullConfigs = (
         AnonymityConfig(suppressionLimit, k, level)
         for suppressionLimit, k, levels in asyncResults
+        if levels is not None
         for level in levels
+        if suppressionLimit is not None
+        and k is not None
+        and levels is not None
     )
 
     yield from fullConfigs

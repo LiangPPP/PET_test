@@ -154,7 +154,7 @@ def generateAnonymityConfigs(
 
     # Filter by ARX API
     configs = list(
-        filterWithKAnonymityParallelly(originalData, dataHierarchy, configs)
+        filterWithKAnonymityParallelly(originalData, dataHierarchy, configs, numOfProcess=2)
     )
 
     print(f"Configs left after filtering : {len(configs)}")
