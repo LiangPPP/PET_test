@@ -34,9 +34,10 @@ def __sample(
         dataSize = len(data)
 
     step = (dataSize - 1) // (count - 1)
+    step = max(step, 1)
 
     steppedData = (
-        element for index, element in enumerate(data) if index % step == 0
+         element for index, element in enumerate(data) if index % step == 0
     )
 
     yield from itertools.islice(steppedData, count)
