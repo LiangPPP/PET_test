@@ -1,0 +1,48 @@
+{
+    "k": 1,
+    "kConfig": 1,
+    "lRelaxed": 1,
+    "lRigorous": 1,
+    "p1": 0,
+    "p2": 0
+}
+{
+    "k": 1,
+    "kConfig": 1,
+    "lRelaxed": 1,
+    "lRigorous": 1,
+    "p1": 1,
+    "p2": 0
+}
+{
+    "k": 1,
+    "kConfig": 1,
+    "lRelaxed": 1,
+    "lRigorous": 1,
+    "p1": 0,
+    "p2": 1
+}
+{
+    "k": 1,
+    "kConfig": 1,
+    "lRelaxed": 1,
+    "lRigorous": 1,
+    "p1": 1,
+    "p2": 1
+}
+{
+    "k": 1,
+    "kConfig": 1,
+    "lRelaxed": 1,
+    "lRigorous": 1,
+    "p1": 0,
+    "p2": 2
+}
+{
+    "k": 2,
+    "kConfig": 1,
+    "lRelaxed": 2,
+    "lRigorous": 1,
+    "p1": 1,
+    "p2": 2
+}

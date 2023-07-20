@@ -64,7 +64,7 @@ def __findQualifiedConfigsImplement(argumentSets: List):
         k,
         transformation,
     ) = argumentSets
-
+    
     utf8 = __javaApi.StandardCharsets.UTF_8
     dataHierarchyFolder = dataHierarchy
     originalDataFile = originalData
@@ -77,11 +77,14 @@ def __findQualifiedConfigsImplement(argumentSets: List):
     setDataHierarchies(originalData, dataHierarchy, attributeTypes, __javaApi)
 
     anonymizedData = applyAnonymousLevels(
-        originalData, transformation, dataHierarchy, attributeTypes, __javaApi
+        originalData, transformation, dataHierarchy, attributeTypes,k, __javaApi
     )
 
     originalDataFrame = getDataFrame(originalData)
+    
     anonymizedDataFrame = getDataFrame(anonymizedData)
+    
+    
     if isAnalysiable(
         originalDataFrame, anonymizedDataFrame, __analysisFunction, bias
     ):
@@ -95,12 +98,15 @@ def __findQualifiedConfigsImplement(argumentSets: List):
             dataHierarchyFolder, ";"
         )
 
+        # print(f"test: {nativeDataHierarchy}")
+
         metrics = Metrics.evaluate(
             originalData,
             anonymizedData,
             k,
             attributeTypes,
             nativeDataHierarchy,
+            transformation
         )
 
         return asdict(metrics)
@@ -111,32 +117,52 @@ def __findQualifiedConfigsImplement(argumentSets: List):
 def __calculateFiveThresholds(values: List[float]) -> Tuple[float]:
     series = pd.Series(values)
 
-    middleAvg = series.mean()
+    valueCount = len(series)
+    sorted_series = series.sort_values(ascending=True)
 
-    firstAvg = series.loc[lambda v: v <= middleAvg].astype(float).mean()
-    thirdAvg = series.loc[lambda v: v >= middleAvg].astype(float).mean()
-
-    firstThreshold = series.loc[lambda v: v <= firstAvg].astype(float).mean()
-    secondThreshold = (
-        series.loc[lambda v: np.logical_and(v >= firstAvg, v <= middleAvg)]
-        .astype(float)
-        .mean()
-    )
-    thirdThreshold = (
-        series.loc[lambda v: np.logical_and(v >= middleAvg, v <= thirdAvg)]
-        .astype(float)
-        .mean()
-    )
-    fourthThreshold = series.loc[lambda v: v >= thirdAvg].astype(float).mean()
-
-    if math.isnan(secondThreshold):
-        secondThreshold = firstThreshold
-    if math.isnan(thirdThreshold):
-        thirdThreshold = secondThreshold
-    if math.isnan(fourthThreshold):
-        fourthThreshold = thirdThreshold
-
+    firstThreshold = sorted_series.iloc[0].astype(float)
+    secondThreshold = sorted_series.iloc[int(valueCount * 0.33)].astype(float)
+    thirdThreshold = sorted_series.iloc[int(valueCount * 0.66)].astype(float)
+    fourthThreshold = sorted_series.iloc[valueCount-1].astype(float)
+    
     return (firstThreshold, secondThreshold, thirdThreshold, fourthThreshold)
+
+    # twentyFivePercent = int(valueCount * 0.25)
+    # fiftyPercent = int(valueCount * 0.5)
+    # seventyFivePercent = int(valueCount * 0.75)
+
+    # firstThreshold = sorted_series[0:twentyFivePercent].astype(float).mean()
+    # secondThreshold = sorted_series[twentyFivePercent:fiftyPercent].astype(float).mean()
+    # thirdThreshold = sorted_series[fiftyPercent:seventyFivePercent].astype(float).mean()
+    # fourthThreshold = sorted_series[seventyFivePercent:valueCount-1].astype(float).mean()
+
+
+    # middleAvg = series.mean()
+
+    # firstAvg = series.loc[lambda v: v <= middleAvg].astype(float).mean()
+    # thirdAvg = series.loc[lambda v: v >= middleAvg].astype(float).mean()
+
+    # firstThreshold = series.loc[lambda v: v <= firstAvg].astype(float).mean()
+    # secondThreshold = (
+    #     series.loc[lambda v: np.logical_and(v >= firstAvg, v <= middleAvg)]
+    #     .astype(float)
+    #     .mean()
+    # )
+    # thirdThreshold = (
+    #     series.loc[lambda v: np.logical_and(v >= middleAvg, v <= thirdAvg)]
+    #     .astype(float)
+    #     .mean()
+    # )
+    # fourthThreshold = series.loc[lambda v: v >= thirdAvg].astype(float).mean()
+
+    # if math.isnan(secondThreshold):
+    #     secondThreshold = firstThreshold
+    # if math.isnan(thirdThreshold):
+    #     thirdThreshold = secondThreshold
+    # if math.isnan(fourthThreshold):
+    #     fourthThreshold = thirdThreshold
+
+    
 
 
 def generateAnonymityConfigs(
@@ -148,10 +174,15 @@ def generateAnonymityConfigs(
 ) -> None:
     # Generate anonymity configs
     total, configs = generateConfigs(originalData)
+    print(total)
+    print(configs)
+    
 
     # First sampling
     configs = list(__sample(configs, firstSampleCount, dataSize=total))
+    print(configs)
     print(f"Configs left after first sampling : {len(configs)}")
+    
 
     # Filter by ARX API
     configs = list(
@@ -193,7 +224,7 @@ def findQualifiedAnonymityConfigs(
                 dataHierarchy,
                 attributeTypes,
                 bias,
-                parameter[1],
+                int(parameter[1]),
                 [int(val) for val in parameter[2:]],
             )
             for parameter in rawParameters
@@ -204,6 +235,7 @@ def findQualifiedAnonymityConfigs(
         asyncResults = pool.imap(
             __findQualifiedConfigsImplement, argumentSets, chunksize=30
         )
+        
 
         for index, result in enumerate(asyncResults):
             if result:
@@ -230,14 +262,17 @@ def calculateThresholds(
 ) -> Dict[str, Tuple[float]]:
     effectiveResults = {
         "k": [],
-        "d": [],
-        "t": [],
-        "l": [],
-        "profitability": [],
-        "ambiguity": [],
-        "precision": [],
-        "nonUniformEntropy": [],
-        "aecs": [],
+        "kConfig": [],
+        # "d": [],
+        # "t": [],
+        "lRelaxed": [],
+        "lRigorous": [],
+        "p1": [],
+        "p2": [],
+        # "ambiguity": [],
+        # "precision": [],
+        # "nonUniformEntropy": [],
+        # "aecs": [],
     }
 
     with open(metricsMeasures, "r") as file:
@@ -263,8 +298,12 @@ def calculateThresholds(
                     values.append(jsonObj[metric])
 
     effectiveResults["k"] = [int(element) for element in effectiveResults["k"]]
-    effectiveResults["l"] = [
-        int(element) for element in effectiveResults["l"]
+    
+    effectiveResults["lRelaxed"] = [
+        int(element) for element in effectiveResults["lRelaxed"]
+    ]
+    effectiveResults["lRigorous"] = [
+        int(element) for element in effectiveResults["lRigorous"]
     ]
 
     thresholds = {}

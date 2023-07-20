@@ -55,6 +55,8 @@ def PETValidation(
     subset = pd.read_csv(subset, sep=";")
     qiNames = getAttributeNameByType(attributeTypes, QUASI_IDENTIFIER)
 
+    at = _measureProfitabilityPayoffNoAttack(subset,qiNames,adversaryCost,adversaryGain)
+
     if allowAttack:
         isProfitable = bool(
             _measureProfitabilityPayoffAcceptingAttack(
@@ -77,4 +79,5 @@ def PETValidation(
         "publisher's loss": publisherLost,
         "publisher's benefit": publisherBenefit,
         "isProfitable": isProfitable,
+        "actual": at
     }

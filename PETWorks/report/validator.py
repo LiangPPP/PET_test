@@ -9,7 +9,8 @@ def isAnalysiable(
     analyzingFunction: Callable,
     error: float,
 ) -> bool:
-    originalValue = analyzingFunction(originalData)
-    anonymityValue = analyzingFunction(anonymizedData)
+#    originalValue = analyzingFunction(originalData)
+#    anonymityValue = analyzingFunction(anonymizedData)
 
-    return abs((originalValue - anonymityValue)) < error
+    return analyzingFunction(originalData,anonymizedData,4)
+#    return abs((originalValue - anonymityValue)) < error

@@ -27,7 +27,8 @@ from multiprocessing import cpu_count
 from PETWorks.tcloseness import (
     measureTCloseness,
 )
-from PETWorks.ldiversity import measureLDiversity
+from PETWorks.kanonymity import _measureKAnonymity
+from PETWorks.ldiversity import measureLDiversity,measureLDiversityRelaxed
 from PETWorks.profitability import _measureProfitabilityPayoffNoAttack
 
 from py4j.java_gateway import Py4JJavaError
@@ -35,15 +36,18 @@ from py4j.java_gateway import Py4JJavaError
 
 @dataclass
 class Metrics:
-    ambiguity: float
-    precision: float
-    nonUniformEntropy: float
-    aecs: float
+    # ambiguity: float
+    # precision: float
+    # nonUniformEntropy: float
+    # aecs: float
     k: int
-    d: float
-    t: float
-    l: int
-    profitability: int
+    kConfig: int
+    # d: float
+    # t: float
+    lRelaxed: int
+    lRigorous: int
+    p1: int
+    p2: int
 
     @staticmethod
     def __evaluateDPresence(
@@ -93,53 +97,69 @@ class Metrics:
         k: int,
         attributeTypes: Dict[str, str],
         dataHierarchy: Dict[str, np.chararray],
+        trans:list[int],
     ) -> "Metrics":
-        utility = UtilityMetrics.evaluate(originalData, anonymizedData)
+        # utility = UtilityMetrics.evaluate(originalData, anonymizedData)
 
-        originalDataFrame = getDataFrame(originalData)
+        # originalDataFrame = getDataFrame(originalData)
         anonymizedDataFrame = getDataFrame(anonymizedData)
 
-        sensitiveAttributes = getAttributeNameByType(
-            attributeTypes, SENSITIVE_ATTRIBUTE
-        )
+        # sensitiveAttributes = getAttributeNameByType(
+        #     attributeTypes, SENSITIVE_ATTRIBUTE
+        # )
+
+        kConfig = k
+
         qiNames = list(
             getAttributeNameByType(attributeTypes, QUASI_IDENTIFIER)
         )
+        kValues = int(_measureKAnonymity(anonymizedDataFrame,qiNames))
 
-        d = Metrics.__evaluateDPresence(
-            originalDataFrame, anonymizedDataFrame, attributeTypes
-        )
+        # d = Metrics.__evaluateDPresence(
+        #     originalDataFrame, anonymizedDataFrame, attributeTypes
+        # )
 
-        t = 1 - max(
-            [
-                measureTCloseness(
-                    originalDataFrame,
-                    anonymizedDataFrame,
-                    sensitive,
-                    qiNames,
-                    dataHierarchy[sensitive],
-                )
-                for sensitive in sensitiveAttributes
-            ],
-            default=1,
-        )
+        
+        
+
+        # t = 1 - max(
+        #     [
+        #         measureTCloseness(
+        #             originalDataFrame,
+        #             anonymizedDataFrame,
+        #             sensitive,
+        #             qiNames,
+        #             dataHierarchy.get(sensitive,None),
+        #         )
+        #         for sensitive in sensitiveAttributes
+        #     ],
+        #     default=1,
+        # )
 
         lLimit = min(measureLDiversity(anonymizedDataFrame, attributeTypes))
+        lRelaxed = min(measureLDiversityRelaxed(anonymizedDataFrame,attributeTypes))
+        CSVNAME = "data/anony" + str(k) + ".csv"
+        anonymizedDataFrame.to_csv(CSVNAME,index=False)
 
-        profitability = _measureProfitabilityPayoffNoAttack(
-            anonymizedDataFrame, qiNames, 4, 200000 / len(anonymizedDataFrame)
-        )
+        # profitability = _measureProfitabilityPayoffNoAttack(
+        #     anonymizedDataFrame, qiNames, 4, 200000 / len(anonymizedDataFrame)
+        # )
+        
+
 
         return Metrics(
-            ambiguity=utility.ambiguity,
-            precision=utility.precision,
-            nonUniformEntropy=utility.nonUniformEntropy,
-            aecs=utility.aecs,
-            k=k,
-            d=d,
-            t=t,
-            l=lLimit,
-            profitability=profitability,
+            # ambiguity=utility.ambiguity,
+            # precision=utility.precision,
+            # nonUniformEntropy=utility.nonUniformEntropy,
+            # aecs=utility.aecs,
+            k=kValues,
+            kConfig = kConfig,
+            # d=d,
+            # t=t,
+            lRelaxed=lRelaxed,
+            lRigorous=lLimit,
+            p1 = trans[0],
+            p2 = trans[1]
         )
 
 
@@ -173,6 +193,7 @@ def __filterWithKAnonymity(args: Tuple):
             originalData, privacyModels, __javaApi, None, suppressRate
         )
     except Py4JJavaError:
+        raise Py4JJavaError
         return (None, None, None)
 
     if not anonymizedResult:
@@ -213,6 +234,7 @@ def filterWithKAnonymityParallelly(
         (originalData, dataHierarchy, config.suppressionLimit, config.k)
         for config in configs
     )
+
 
     asyncResults = pool.imap(
         __filterWithKAnonymity, argumentSets, chunksize=30

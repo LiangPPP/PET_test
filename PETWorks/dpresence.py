@@ -88,4 +88,4 @@ def PETValidation(
     )
     fulfillDPresence = validateDPresence(deltaValues, float(dMin), float(dMax))
 
-    return {"dMin": dMin, "dMax": dMax, "d-presence": fulfillDPresence}
+    return {"dMin": dMin, "dMax": dMax, "d-presence": fulfillDPresence, "actual": deltaValues}

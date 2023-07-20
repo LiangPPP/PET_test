@@ -63,35 +63,46 @@ def _computeHierarchicalDistance(
 
     return float(np.sum(costArray))
 
-
-def _computeNumericalDistance(
-    dataDistribution: dict[str, float],
-    groupDistribution: dict[str, float],
-    originalSensitiveData: pd.Series,
+def _computeEqualDistance(
+        dataDistribution: dict[str, float],
+        groupDistribution: dict[str, float],
 ) -> float:
-    originalSensitiveData = originalSensitiveData.sort_values(
-        ascending=True, key=lambda x: pd.to_numeric(x, errors="coerce")
-    )
-    numRows = len(originalSensitiveData)
-
-    valueList = sorted(
-        [originalSensitiveData[index] for index in range(numRows)],
-        key=lambda x: pd.to_numeric(x),
-    )
-
+    numRows = len(dataDistribution)
     extraList = [
         float(groupDistribution.get(value, 0) - dataDistribution.get(value, 0))
-        for value in valueList
+        for value in dataDistribution.keys()
     ]
 
     distance = 0.0
     for index in range(numRows):
-        sum = 0
-        for subIndex in range(index):
-            sum += extraList[subIndex]
+        distance += fabs(extraList[index])
+    distance /= 2
+
+    return distance
+
+
+def _computeNumericalDistance(
+    dataDistribution: dict[str, float],
+    groupDistribution: dict[str, float],
+) -> float:
+    sortedDataDistribution = {key: dataDistribution[key] for key in sorted(
+        dataDistribution, key=lambda x: float("inf") if x=="" else float(x) 
+    )}
+
+    numRows = len(dataDistribution)
+
+    extraList = [
+        float(groupDistribution.get(key, 0) - dataDistribution.get(key, 0))
+        for key in sortedDataDistribution.keys()
+    ]
+
+    distance = 0.0
+    sum = 0.0
+    for index in range(numRows - 1):
+        sum += extraList[index]
         distance += fabs(sum)
     distance /= numRows - 1
-
+    print(distance)
     return distance
 
 
@@ -102,26 +113,48 @@ def _computeTCloseness(
     qiNames: list[str],
     sensitiveHierarchy: np.chararray,
 ) -> float:
+    # originalData = originalData.dropna()
+    # anonymizedData = anonymizedData.dropna()
+    
+    
+    
+
     dataDistribution = dict(
-        originalData[sensitiveAttributeName].value_counts() * 0
-        + 1 / originalData[sensitiveAttributeName].nunique()
+        originalData[sensitiveAttributeName].value_counts() / len(originalData)
     )
+    
     anonymizedGroups = anonymizedData.groupby(qiNames)
 
     maxHierarchicalDistance = float("-inf")
     for _, group in anonymizedGroups:
         groupDistribution = dict(
-            group[sensitiveAttributeName].value_counts() * 0 + 1 / len(group)
+            group[sensitiveAttributeName].value_counts() / len(group)
         )
-        if sensitiveHierarchy is not None:
-            distance = _computeHierarchicalDistance(
-                dataDistribution, groupDistribution, sensitiveHierarchy
-            )
-        else:
+        
+        isNumeral = False
+        #for 運動數據
+        NumeralList = ["achievement_count", "elapsed_time","upper_extremity_muscle_strength"]
+        for NumeralName in NumeralList:
+            if sensitiveAttributeName == NumeralName:
+                isNumeral = True
+        
+        # try:
+        #     float(anonymizedData[sensitiveAttributeName].iloc[0])
+        #     isNumeral = True
+        # except ValueError:
+        #     pass
+        if isNumeral:
             distance = _computeNumericalDistance(
                 dataDistribution,
                 groupDistribution,
-                originalData[sensitiveAttributeName],
+            )
+        elif sensitiveHierarchy is not None:
+            distance = _computeHierarchicalDistance(
+                dataDistribution, groupDistribution, originalData[sensitiveAttributeName],
+            )
+        elif sensitiveHierarchy is None:
+            distance = _computeEqualDistance(
+                dataDistribution, groupDistribution, 
             )
 
         if distance > maxHierarchicalDistance:
@@ -138,15 +171,15 @@ def measureTCloseness(
     sensitiveHierarchy: np.chararray,
 ) -> float:
     isNumerical = True
-    try:
-        float(sensitiveHierarchy[0, 0])
-    except ValueError:
-        isNumerical = False
+    # try:
+    #     float(sensitiveHierarchy[0, 0])
+    # except ValueError:
+    #     isNumerical = False
 
-    if isNumerical:
-        return _computeTCloseness(
-            originalData, anonymizedData, sensitiveAttributeName, qiNames, None
-        )
+    # if isNumerical:
+    #     return _computeTCloseness(
+    #         originalData, anonymizedData, sensitiveAttributeName, qiNames, None
+    #     )
 
     return _computeTCloseness(
         originalData,
@@ -181,11 +214,11 @@ def PETValidation(
             anonymizedData,
             sensitiveAttribute,
             qiNames,
-            dataHierarchy,
+            dataHierarchy.get(sensitiveAttribute, None),
         )
         for sensitiveAttribute in sensitiveAttributes
     ]
 
     fullfilTCloseness = all(_validateTCloseness(t, tLimit) for t in tList)
 
-    return {"t": tLimit, "fullfil t-closeness": fullfilTCloseness}
+    return {"t": tLimit, "fullfil t-closeness": fullfilTCloseness, "actual": max(tList)}

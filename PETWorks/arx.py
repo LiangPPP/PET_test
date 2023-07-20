@@ -316,7 +316,7 @@ def anonymizeData(
         anonymizedData = anonymizer.anonymize(original, arxConfig)
     except Py4JJavaError as e:
         raise e
-
+    
     return anonymizedData
 
 
@@ -325,13 +325,14 @@ def applyAnonymousLevels(
     anonymousLevels: List[int],
     hierarchies: Dict[str, Hierarchy],
     attributeTypes: Dict[str, str],
+    k: int,
     javaApi: JavaApi,
 ) -> Data:
     levels = javaApi.new_array(javaApi.Int, len(anonymousLevels))
     for i in range(len(anonymousLevels)):
         levels[i] = anonymousLevels[i]
 
-    privacyModels = [javaApi.KAnonymity(1)]
+    privacyModels = [javaApi.KAnonymity(k)]
 
     try:
         anonymizedData = anonymizeData(original, privacyModels, javaApi)
