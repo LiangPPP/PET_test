@@ -332,7 +332,7 @@ def applyAnonymousLevels(
     for i in range(len(anonymousLevels)):
         levels[i] = anonymousLevels[i]
 
-    privacyModels = [javaApi.KAnonymity(k)]
+    privacyModels = [javaApi.KAnonymity(1)]
 
     try:
         anonymizedData = anonymizeData(original, privacyModels, javaApi)

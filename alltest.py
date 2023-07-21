@@ -5,6 +5,7 @@ from PETWorks.autoturn import calculateThresholds
 from PETWorks.attributetypes import *
 from PETWorks import PETValidation,report
 import random
+import gc
 
 
 
@@ -122,14 +123,24 @@ originalDataList = ["data/sport_new/raw_data_utf8_2MinuteStepTest_original.csv",
                     "data/sport_new/raw_data_utf8_RightHandGripStrengthTest_original.csv",
                     "data/sport_new/raw_data_utf8_SingleLegBalanceLeft_original.csv",
                     "data/sport_new/raw_data_utf8_SingleLegBalanceRight_original.csv"]
+
 for od in originalDataList:
+
+    generateAnonymityConfigs(
+    originalData=od,
+    dataHierarchy="data/sport_new/sport_hierarchy",
+    output="combination.csv",
+    firstSampleCount=100,
+    secondSampleCount=100
+    )
+
     err = 4
     if od == "data/sport_new/raw_data_utf8_2MinuteStepTest_original.csv":
         err = 10
     findQualifiedAnonymityConfigs(
     originalData=od,
     dataHierarchy="data/sport_new/sport_hierarchy",
-    anonymityConfigs="combination_.csv",
+    anonymityConfigs="combination.csv",
     attributeTypes={
         "_id": SENSITIVE_ATTRIBUTE,
         "achievement_count": SENSITIVE_ATTRIBUTE,

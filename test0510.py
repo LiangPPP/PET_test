@@ -142,8 +142,8 @@ generateAnonymityConfigs(
     originalData="data/sport/sport_prepossed.csv",
     dataHierarchy="data/sport/sport_hierarchy",
     output="combination.csv",
-    firstSampleCount=100,
-    secondSampleCount=100
+    firstSampleCount=1000,
+    secondSampleCount=1000
 )
 
 findQualifiedAnonymityConfigs(

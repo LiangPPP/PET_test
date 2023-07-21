@@ -10,6 +10,8 @@ def _measureKAnonymity(anonymized: pd.DataFrame, qiNames: list[str]) -> int:
     anonymized = anonymized.loc[
         ~anonymized[qiNames].isin(suppressedValues).all(axis=1)
     ]
+
+    anonymized.to_csv("ktest.csv")
     
     return anonymized.groupby(qiNames).size().min()
 

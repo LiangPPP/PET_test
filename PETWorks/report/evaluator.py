@@ -138,6 +138,8 @@ class Metrics:
 
         lLimit = min(measureLDiversity(anonymizedDataFrame, attributeTypes))
         lRelaxed = min(measureLDiversityRelaxed(anonymizedDataFrame,attributeTypes))
+
+        #輸出i
         CSVNAME = "data/anony" + str(k) + ".csv"
         anonymizedDataFrame.to_csv(CSVNAME,index=False)
 

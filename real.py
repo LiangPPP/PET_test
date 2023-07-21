@@ -1,8 +1,8 @@
 from PETWorks import PETValidation, report
 from PETWorks.attributetypes import QUASI_IDENTIFIER,SENSITIVE_ATTRIBUTE,IDENTIFIER
-originalData = "data/sport/sport_prepossed.csv"
-anonymizedData = "data/sport/sport_anony.csv"
-dataHierarchy = "data/sport/sport_hierarchy"
+originalData = "data/sport_new/raw_data_utf8_SingleLegBalanceRight_original.csv"
+anonymizedData = "data/anony9.csv"
+dataHierarchy = "data/sport_new/sport_hierarchy"
 
 attributeTypes={
         "_id": SENSITIVE_ATTRIBUTE,
@@ -19,43 +19,43 @@ attributeTypes={
         "user_id": IDENTIFIER,
     }
 k = PETValidation(originalData, anonymizedData, "k-anonymity", attributeTypes=attributeTypes, k=10)
-a = PETValidation(
-    originalData, anonymizedData,
-    "Ambiguity",
-    dataHierarchy=dataHierarchy,
-    attributeTypes=attributeTypes
-)
-P = PETValidation(
-    originalData, anonymizedData,
-    "Precision",
-    dataHierarchy=dataHierarchy,
-    attributeTypes=attributeTypes
-)
-e = PETValidation(
-    originalData, anonymizedData,
-    "Non-Uniform Entropy",
-    dataHierarchy=dataHierarchy,
-    attributeTypes=attributeTypes
-)
-aecs = PETValidation(
-    originalData, anonymizedData,
-    "AECS",
-    attributeTypes=attributeTypes
-)
-d = PETValidation(originalData, anonymizedData, "d-presence", dataHierarchy=dataHierarchy, attributeTypes=attributeTypes, dMin=1/2, dMax=2/3)
-PRO = PETValidation(
-    originalData,
-    anonymizedData,
-    "profitability",
-    dataHierarchy=dataHierarchy,
-    attributeTypes=attributeTypes,
-    allowAttack=True,
-    adversaryCost=4,
-    adversaryGain=300,
-    publisherLost=300,
-    publisherBenefit=1200
-)
-ld = PETValidation(originalData, anonymizedData, "l-diversity", attributeTypes=attributeTypes, l=3)
+# a = PETValidation(
+#     originalData, anonymizedData,
+#     "Ambiguity",
+#     dataHierarchy=dataHierarchy,
+#     attributeTypes=attributeTypes
+# )
+# P = PETValidation(
+#     originalData, anonymizedData,
+#     "Precision",
+#     dataHierarchy=dataHierarchy,
+#     attributeTypes=attributeTypes
+# )
+# e = PETValidation(
+#     originalData, anonymizedData,
+#     "Non-Uniform Entropy",
+#     dataHierarchy=dataHierarchy,
+#     attributeTypes=attributeTypes
+# )
+# aecs = PETValidation(
+#     originalData, anonymizedData,
+#     "AECS",
+#     attributeTypes=attributeTypes
+# )
+# d = PETValidation(originalData, anonymizedData, "d-presence", dataHierarchy=dataHierarchy, attributeTypes=attributeTypes, dMin=1/2, dMax=2/3)
+# PRO = PETValidation(
+#     originalData,
+#     anonymizedData,
+#     "profitability",
+#     dataHierarchy=dataHierarchy,
+#     attributeTypes=attributeTypes,
+#     allowAttack=True,
+#     adversaryCost=4,
+#     adversaryGain=300,
+#     publisherLost=300,
+#     publisherBenefit=1200
+# )
+# ld = PETValidation(originalData, anonymizedData, "l-diversity", attributeTypes=attributeTypes, l=3)
 
 # print("l-diversity")
 # report(ld, "json")
